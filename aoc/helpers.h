@@ -196,12 +196,12 @@ namespace aoc {
         return !out.empty() || s.good();
     }
 
-    using UnaryIntFunction = std::function<void(int)>;
+    using UnaryIntFunction = std::function<void(const int64_t)>;
     void parse_as_integers(std::istream& s, const char delim, UnaryIntFunction op) {
         std::string l;
         while (getline(s, l, delim)) {
             try {
-                int n = aoc::stoi(l);
+                const auto n = aoc::stoi(l);
                 op(n);
             } catch (...) { }
         }
@@ -210,7 +210,7 @@ namespace aoc {
         std::string l;
         while (getline(s, l, delims)) {
             try {
-                int n = aoc::stoi(l);
+                const auto n = aoc::stoi(l);
                 op(n);
             } catch (...) { }
         }
@@ -219,7 +219,7 @@ namespace aoc {
         std::string l;
         while (getline(s, l)) {
             try {
-                int n = aoc::stoi(l);
+                const auto n = aoc::stoi(l);
                 op(n);
             } catch (...) { }
         }
@@ -229,7 +229,7 @@ namespace aoc {
         std::string_view l;
         while (getline(ss, l, delim)) {
             try {
-                int n = aoc::stoi(l);
+                const auto n = aoc::stoi(l);
                 op(n);
             } catch (...) { }
         }
@@ -239,7 +239,7 @@ namespace aoc {
         std::string_view l;
         while (getline(ss, l, delims)) {
             try {
-                int n = aoc::stoi(l);
+                const auto n = aoc::stoi(l);
                 op(n);
             } catch (...) { }
         }
