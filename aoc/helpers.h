@@ -1,0 +1,362 @@
+#pragma once
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <chrono>
+#include <cassert>
+#include <functional>
+#include <iomanip>
+
+#ifndef NDEBUG
+#define DEBUG(x) do { \
+    x; \
+} while (0)
+#else
+#define DEBUG(x)
+#endif
+
+#define DEBUG_PRINT(x) do { DEBUG(std::cout << __func__ << ":" << __LINE__ << ": " << x << std::endl); } while (0)
+
+#define STRING_CONSTANT(symbol, value) constexpr std::string_view symbol(value)
+
+#ifndef INT_MIN
+#define INT_MIN std::numeric_limits<int>::min()
+#endif
+
+#ifndef INT_MAX
+#define INT_MAX std::numeric_limits<int>::max()
+#endif
+
+namespace aoc {
+
+    using Point = std::pair<int, int>;
+    // Needed if we want to store a point in a hash
+    struct PointHash {
+        std::size_t operator() (const Point& pair) const {
+            size_t v = pair.first;
+            v <<= 32;
+            v |= pair.second;
+            return v;
+        }
+    };
+
+    const auto print_result = [](int part, auto result) {
+        std::cout << "Part " << part << ": " << result << std::endl;
+    };
+
+    const auto print_results = [](const auto& part1, const auto& part2) {
+        print_result(1, part1);
+        print_result(2, part2);
+    };
+
+    const auto assert_result = [](auto r, auto e) {
+        std::cout << "Expected: " << e << " Got: " << r;
+        if (e != r) {
+            std::cout << " FAILED" << std::endl;
+            exit(-1);
+        }
+        std::cout << " OK" << std::endl;
+    };
+
+    auto open_argv_1(int argc, char **argv) {
+        if (argc < 2) {
+            throw std::runtime_error("Insufficient arguments");
+        }
+
+        std::ifstream f;
+        f.open(argv[1]);
+        return f;
+    }
+
+    std::ostream& bold_on(std::ostream& os) {
+        return os << "\e[1m";
+    }
+
+    std::ostream& bold_off(std::ostream& os) {
+        return os << "\e[0m";
+    }
+
+    std::ostream& cls(std::ostream& os) {
+        return os << "\033[2J\033[1;1H";
+    }
+
+    bool ends_with(const std::string_view s, const std::string_view p) {
+        if (s.size() < p.size()) { return false; }
+        const auto e = s.substr(s.size() - p.size());
+        return e == p;
+    }
+
+    bool starts_with(const std::string_view s, const std::string_view p) {
+        if (s.size() < p.size()) { return false; }
+        const auto e = s.substr(0, p.size());
+        return e == p;
+    }
+
+    int64_t stoi(const std::string_view sv) {
+        int64_t out = 0;
+        for (const auto& c : sv) {
+            switch (c) {
+                case '0':
+                    out *= 10; break;
+                case '1':
+                    out *= 10; out += 1; break;
+                case '2':
+                    out *= 10; out += 2; break;
+                case '3':
+                    out *= 10; out += 3; break;
+                case '4':
+                    out *= 10; out += 4; break;
+                case '5':
+                    out *= 10; out += 5; break;
+                case '6':
+                    out *= 10; out += 6; break;
+                case '7':
+                    out *= 10; out += 7; break;
+                case '8':
+                    out *= 10; out += 8; break;
+                case '9':
+                    out *= 10; out += 9; break;
+                default:
+                    throw std::runtime_error("Not an integer");
+            }
+        }
+        return out;
+    }
+
+    bool getline(std::string_view& s, std::string_view& out, const std::string_view delims, bool return_empty = false) {
+        out = std::string_view();
+        if (s.empty()) { return false; }
+
+        do {
+            const size_t end = s.find_first_of(delims);
+
+            if (end != std::string_view::npos) {
+                out = s.substr(0, end);
+                s = s.substr(end + 1);
+            } else {
+                out = s;
+                s = std::string_view();
+                break;
+            }
+        } while ((!return_empty && out.empty()) && !s.empty());
+
+        return (return_empty || !out.empty());
+    }
+
+    bool getline(std::string_view& s, std::string_view& out, const char delim) {
+        return getline(s, out, std::string_view(&delim, 1));
+    }
+    bool getline(std::string_view& s, std::string_view& out) {
+        return getline(s, out, std::string_view("\r\n", 2));
+    }
+
+    bool getline(std::istream& s, std::string& out, const std::string_view delims) {
+        char c;
+        out.resize(0);
+        while (s.good() && (c = s.get())) {
+            if (delims.find(c) != std::string_view::npos) {
+                if (out.empty()) {
+                    continue;
+                }
+                return true;
+            }
+            if (c > 0) {
+                out.append(&c, 1);
+            }
+        }
+        return !out.empty() || s.good();
+    }
+    bool getline(std::istream& s, std::string& out, const char delim) {
+        return getline(s, out, std::string_view(&delim, 1));
+    }
+    bool getline(std::istream& s, std::string& out) {
+        char c;
+        out.resize(0);
+        while (s.good() && (c = s.get())) {
+            switch (c) {
+                case '\r':
+                case '\n':
+                    if (out.empty()) { continue; }
+                    return true;
+                default:
+                    if (c > 0) {
+                        out.append(&c, 1);
+                    }
+                    break;
+            }
+        }
+        return !out.empty() || s.good();
+    }
+
+    using UnaryIntFunction = std::function<void(int)>;
+    void parse_as_integers(std::istream& s, const char delim, UnaryIntFunction op) {
+        std::string l;
+        while (getline(s, l, delim)) {
+            try {
+                int n = aoc::stoi(l);
+                op(n);
+            } catch (...) { }
+        }
+    }
+    void parse_as_integers(std::istream& s, const std::string_view delims, UnaryIntFunction op) {
+        std::string l;
+        while (getline(s, l, delims)) {
+            try {
+                int n = aoc::stoi(l);
+                op(n);
+            } catch (...) { }
+        }
+    }
+    void parse_as_integers(std::istream& s, UnaryIntFunction op) {
+        std::string l;
+        while (getline(s, l)) {
+            try {
+                int n = aoc::stoi(l);
+                op(n);
+            } catch (...) { }
+        }
+    }
+    void parse_as_integers(const std::string& s, const char delim, UnaryIntFunction op) {
+        std::string_view ss(s);
+        std::string_view l;
+        while (getline(ss, l, delim)) {
+            try {
+                int n = aoc::stoi(l);
+                op(n);
+            } catch (...) { }
+        }
+    }
+    void parse_as_integers(const std::string_view s, const std::string_view delims, UnaryIntFunction op) {
+        std::string_view ss(s);
+        std::string_view l;
+        while (getline(ss, l, delims)) {
+            try {
+                int n = aoc::stoi(l);
+                op(n);
+            } catch (...) { }
+        }
+    }
+
+    class AutoTimer {
+    private:
+        std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+        std::string name_;
+
+    public:
+        AutoTimer()
+            : start_(std::chrono::high_resolution_clock::now())
+        { }
+
+        AutoTimer(const char *name)
+            : start_(std::chrono::high_resolution_clock::now())
+            , name_(name)
+        { }
+
+        ~AutoTimer() {
+            calculate_time();
+        }
+
+        void elapsed() const {
+            calculate_time();
+        }
+
+        void reset() {
+            start_ = std::chrono::high_resolution_clock::now();
+        }
+
+    private:
+        // Needs to be a lambda due to use of auto
+        void calculate_time () const {
+            const auto end = std::chrono::high_resolution_clock::now();
+
+            // Calculating total time taken by the program.
+            double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start_).count();
+            time_taken *= 1e-9;
+
+            std::cout << "Elapsed" << (name_.empty() ? "" : " " + name_) << ": " << std::fixed << time_taken << std::setprecision(9) << " sec" << std::endl;
+        }
+
+    };
+
+    template<typename T>
+    class MappedFileSource {
+    public:
+
+        MappedFileSource()
+            : _fd(0)
+            , _size(0)
+            , _map(nullptr)
+        {}
+
+        MappedFileSource(const char *filename) 
+            : MappedFileSource()
+        {
+            map_file(filename);
+        }
+
+        MappedFileSource(int argc, char **argv)
+            : MappedFileSource()
+        {
+            if (argc < 2) {
+                throw std::runtime_error("Insufficient arguments");
+            }
+
+            map_file(argv[1]);
+        }
+
+        ~MappedFileSource() {
+            reset();
+        }
+
+        void reset() {
+            if (_map) {
+                ::munmap(_map, _size);
+            }
+            if (_fd) {
+                ::close(_fd);
+            }
+
+            _map = nullptr;
+            _fd = 0;
+            _size = 0;
+        }
+
+        void reset(const char *filename) {
+            this->reset();
+            this->map_file(filename);
+        }
+
+        void map_file(const char *filename) {
+            if (!filename) { throw std::runtime_error("map_file: nullptr"); }
+            if (_fd || _map || _size) { throw std::runtime_error("map_file: already mapped"); }
+
+            _fd = ::open(filename, O_RDONLY);
+            if (_fd == -1) { throw std::runtime_error("map_file: open failed"); }
+
+            struct stat fs;
+            int r = ::fstat(_fd, &fs);
+            if (r == -1) { reset(); throw std::runtime_error("map_file: fstat failed"); }
+            _size = fs.st_size;
+
+            _map = (T*)::mmap(0, _size, PROT_READ, MAP_SHARED, _fd, 0);
+            if (!_map) { reset(); throw std::runtime_error("map_file: mmap failed"); }
+        }
+
+        const T* data() const { return _map; }
+        size_t size() const { return _size; }
+
+    private:
+
+        int _fd;
+        size_t _size;
+        T* _map;
+    };
+};
