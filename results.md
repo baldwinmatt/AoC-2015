@@ -6,4 +6,4 @@ Yours results will vary, as these are based on my inputs which are found in the 
 | --- | ------ | ------ |
 | 1 | 280 | 1797 |
 | 2 | 1588178 | 3783758 |
-
+| 3 | 2592 | 2360 |
