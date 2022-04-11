@@ -7,6 +7,15 @@ BUILD_DIR="${ROOT_DIR}/build"
 BUILDS_ROOT_DIR="${BUILD_DIR}/private/builds"
 
 BUILD_TYPE=RelWithDebInfo
+OPENSSL_ROOT_DIR=
+
+if [[ -e '/usr/local/Cellar/openssl@1.1/' ]]; then
+    ver=$(ls -1 /usr/local/Cellar/openssl@1.1/ | tail -n1)
+    OPENSSL_ROOT_DIR="/usr/local/Cellar/openssl@1.1/$ver"
+elif [[ -e '/usr/local/Cellar/openssl/' ]]; then
+    ver=$(ls -1 /usr/local/Cellar/openssl/ | tail -n1)
+    OPENSSL_ROOT_DIR="/usr/local/Cellar/openssl/$ver"
+fi
 
 if [[ $# > 0 ]]; then
     case "${1}" in
@@ -68,6 +77,10 @@ THIS_BUILD_DIR="${BUILDS_ROOT_DIR}/${BUILD_TYPE}"
 if [[ "$(command -v ninja)" ]]; then
     THIS_CMAKE_ARGS=-GNinja
     BUILD_CMD=ninja
+fi
+
+if [[ ! -z "${OPENSSL_ROOT_DIR}" ]]; then
+    export OPENSSL_ROOT_DIR=$OPENSSL_ROOT_DIR
 fi
 
 mkdir -p "${THIS_BUILD_DIR}"
