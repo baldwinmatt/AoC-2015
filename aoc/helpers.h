@@ -100,6 +100,28 @@ namespace aoc {
         return e == p;
     }
 
+    bool is_numeric(const std::string_view sv) {
+        if (sv.empty()) { return false; }
+        for (const auto& c : sv) {
+            switch (c) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    continue;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+
     int64_t stoi(const std::string_view sv) {
         int64_t out = 0;
         for (const auto& c : sv) {
