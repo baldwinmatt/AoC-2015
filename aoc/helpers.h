@@ -100,29 +100,40 @@ namespace aoc {
         return e == p;
     }
 
+    bool is_numeric(const char c) {
+        switch (c) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                return true;
+            default:
+                return false;
+        }
+    }
+
     bool is_numeric(const std::string_view sv) {
         if (sv.empty()) { return false; }
+        bool first = true;
         for (const auto& c : sv) {
-            switch (c) {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    continue;
-                default:
-                    return false;
+            if (first && c == '-') { first = false; continue; }
+            first = false;
+            if (!is_numeric(c)) {
+                return false;
             }
         }
         return true;
     }
 
-    int64_t stoi(const std::string_view sv) {
+    int64_t stoi(std::string_view sv) {
+        bool neg = false;
+        bool first = true;
         int64_t out = 0;
         for (const auto& c : sv) {
             switch (c) {
@@ -146,11 +157,14 @@ namespace aoc {
                     out *= 10; out += 8; break;
                 case '9':
                     out *= 10; out += 9; break;
+                case '-':
+                    if (first) { neg = true; continue; }
                 default:
                     throw std::runtime_error("Not an integer");
             }
+            first = false;
         }
-        return out;
+        return out * (1 - 2 * neg);
     }
 
     bool getline(std::string_view& s, std::string_view& out, const std::string_view delims, bool return_empty = false) {
