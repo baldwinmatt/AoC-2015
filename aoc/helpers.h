@@ -14,6 +14,8 @@
 #include <cassert>
 #include <functional>
 #include <iomanip>
+#include <vector>
+#include <memory>
 
 #ifndef NDEBUG
 #define DEBUG(x) do { \
