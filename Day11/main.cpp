@@ -17,7 +17,7 @@ namespace {
   };
 
   const auto RotateString = [](std::string& s) {
-    size_t i = s.size() - 1;
+    ssize_t i = s.size() - 1;
     s[i] = RotateChar(s[i]);
 
     while (i >= 0 && s[i] == 'a') {
