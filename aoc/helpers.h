@@ -30,25 +30,216 @@
 #define STRING_CONSTANT(symbol, value) constexpr std::string_view symbol(value)
 
 #ifndef INT_MIN
-#define INT_MIN std::numeric_limits<int>::min()
+constexpr auto __aoc_int_min = std::numeric_limits<int>::min();
+#define INT_MIN __aoc_int_min
 #endif
 
 #ifndef INT_MAX
-#define INT_MAX std::numeric_limits<int>::max()
+constexpr auto __aoc_int_max = std::numeric_limits<int>::max();
+#define INT_MAX __aoc_int_max
 #endif
 
 namespace aoc {
 
-    using Point = std::pair<int, int>;
+    using Point = std::pair<int64_t, int64_t>;
+
+    enum class CardinalDirection {
+        North = 0,
+        NorthEast = 45,
+        East = 90,
+        SouthEast = 135,
+        South = 180,
+        SouthWest = 225,
+        West = 270,
+        NorthWest = 315,
+    };
+
+    const std::vector<CardinalDirection> DIRECTIONS {
+        CardinalDirection::North,
+        CardinalDirection::NorthEast, 
+        CardinalDirection::East,
+        CardinalDirection::SouthEast,
+        CardinalDirection::South,
+        CardinalDirection::SouthWest,
+        CardinalDirection::West,
+        CardinalDirection::NorthWest,
+    };
+}
+
+std::ostream& operator<<(std::ostream& os, const aoc::Point p) {
+    os << "{ " << p.first << ", " << p.second << " }";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const aoc::CardinalDirection p) {
+    switch (p) {
+        case aoc::CardinalDirection::North: os << "North"; return os;
+        case aoc::CardinalDirection::NorthEast: os << "NorthEast"; return os;
+        case aoc::CardinalDirection::NorthWest: os << "NorthWest"; return os;
+        case aoc::CardinalDirection::South: os << "South"; return os;
+        case aoc::CardinalDirection::SouthEast: os << "SouthEast"; return os;
+        case aoc::CardinalDirection::SouthWest: os << "SouthWest"; return os;
+        case aoc::CardinalDirection::East: os << "East"; return os;
+        case aoc::CardinalDirection::West: os << "West"; return os;
+    }
+    assert(false);
+    os << static_cast<int>(p);
+    return os;
+}
+
+aoc::Point operator+(const aoc::Point& lhs, const aoc::Point& rhs) {
+    aoc::Point out{lhs.first + rhs.first, lhs.second + rhs.second};
+    return out;
+}
+
+aoc::Point operator*(const aoc::Point& lhs, const int x) {
+    aoc::Point out{lhs.first * x, lhs.second * x};
+    return out;
+}
+
+aoc::Point& operator+=(aoc::Point& lhs, const aoc::Point& rhs) {
+    lhs.first += rhs.first;
+    lhs.second += rhs.second;
+    return lhs;
+}
+
+aoc::Point& operator*=(aoc::Point& lhs, const int x) {
+    lhs.first *= x;
+    lhs.second *= x;
+    return lhs;
+}
+
+aoc::Point operator-(const aoc::Point& lhs, const aoc::Point& rhs) {
+    aoc::Point out{lhs.first - rhs.first, lhs.second - rhs.second};
+    return out;
+}
+namespace aoc {
+    // Taken from boost hash combine
+    template <typename SizeT>
+    inline void hash_combine_impl(SizeT& seed, SizeT value)
+    {
+        seed ^= value + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    }
+
+    inline void hash_combine_impl(uint32_t& h1, uint32_t k1)
+    {
+        const uint32_t c1 = 0xcc9e2d51;
+        const uint32_t c2 = 0x1b873593;
+
+        k1 *= c1;
+        k1 =(k1 << 15) | (k1 >> (32 - 15));
+        k1 *= c2;
+
+        h1 ^= k1;
+        h1 = (h1 << 13) | (h1 >> (32 - 13));
+        h1 = h1*5+0xe6546b64;
+    }
+
+    template <class T>
+    inline void hash_combine(std::size_t& seed, T const& v)
+    {
+        std::hash<T> hasher;
+        return hash_combine_impl(seed, hasher(v));
+    }
+
     // Needed if we want to store a point in a hash
     struct PointHash {
         std::size_t operator() (const Point& pair) const {
-            size_t v = pair.first;
-            v <<= 32;
-            v |= pair.second;
-            return v;
+            std::size_t seed = 0;
+            hash_combine(seed, pair.first);
+            hash_combine(seed, pair.second);
+            return seed;
         }
     };
+
+    template <typename T> constexpr int sgn(T val) {
+        return (T(0) < val) - (val < T(0));
+    }
+
+    aoc::Point abs(const aoc::Point& p) {
+        return {std::abs(p.first), std::abs(p.second)};
+    }
+
+    int64_t manhattan(const aoc::Point& p, const aoc::Point& q) {
+        const auto diff = aoc::abs(p - q);
+        return diff.first + diff.second;
+    }
+
+    aoc::Point max(const aoc::Point& lhs, const aoc::Point& rhs) {
+        return { std::max(lhs.first, rhs.first), std::max(lhs.second, rhs.second) };
+    }
+
+    aoc::Point min(const aoc::Point& lhs, const aoc::Point& rhs) {
+        return { std::min(lhs.first, rhs.first), std::min(lhs.second, rhs.second) };
+    }
+
+    CardinalDirection fromBearing(int32_t bearing) {
+        while (bearing < 0) {
+            bearing += 360;
+        }
+        if (bearing >= 360) {
+            bearing %= 360;
+        }
+        switch (bearing) {
+            case 0:
+                return CardinalDirection::North;
+            case 45:
+                return CardinalDirection::NorthEast;
+            case 90:
+                return CardinalDirection::East;
+            case 135:
+                return CardinalDirection::SouthEast;
+            case 180:
+                return CardinalDirection::South;
+            case 225:
+                return CardinalDirection::SouthWest;
+            case 270:
+                return CardinalDirection::West;
+            case 325:
+                return CardinalDirection::NorthWest;
+            default:
+                throw std::runtime_error("Bad bearing: " + std::to_string(bearing));
+        }
+    }
+
+    CardinalDirection turnLeft(CardinalDirection dir) {
+        int32_t bearing = static_cast<int32_t>(dir);
+        bearing -= 90;
+        return fromBearing(bearing);
+    }
+
+    CardinalDirection turnRight(CardinalDirection dir) {
+        int32_t bearing = static_cast<int32_t>(dir);
+        bearing += 90;
+        return fromBearing(bearing);
+    }
+
+    aoc::Point stepFromCardinalDirection(CardinalDirection dir) {
+        switch (dir) {
+            case CardinalDirection::North:
+                return { 0, -1 };
+            case CardinalDirection::NorthEast:
+                return { 1, -1 };
+            case CardinalDirection::East:
+                return { 1, 0 };
+            case CardinalDirection::SouthEast:
+                return { 1, 1 };
+            case CardinalDirection::South:
+                return { 0, 1 };
+            case CardinalDirection::SouthWest:
+                return { -1, 1 };
+            case CardinalDirection::West:
+                return { -1, 0 };
+            case CardinalDirection::NorthWest:
+                return { -1, -1 };
+        }
+        throw std::runtime_error("Bad direction: " + std::to_string(static_cast<int32_t>(dir)));
+    }
+
+    aoc::Point moveInDirection(const aoc::Point pt, CardinalDirection dir, int steps) {
+      aoc::Point step = stepFromCardinalDirection(dir) * steps;
+      return pt + step;
+    }
 
     const auto print_result = [](int part, auto result) {
         std::cout << "Part " << part << ": " << result << std::endl;
