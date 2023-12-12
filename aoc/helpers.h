@@ -234,6 +234,15 @@ namespace aoc {
         return !out.empty() || s.good();
     }
 
+    std::vector<std::string_view> split(std::string_view& s, const std::string_view delims) {
+        std::vector<std::string_view> out;
+        std::string_view l;
+        while (getline(s, l, delims)) {
+            out.push_back(l);
+        }
+        return out;
+    }
+
     using UnaryIntFunction = std::function<void(const int64_t)>;
     void parse_as_integers(std::istream& s, const char delim, UnaryIntFunction op) {
         std::string l;
