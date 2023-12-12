@@ -291,7 +291,16 @@ namespace aoc {
             } catch (...) { }
         }
     }
-
+    void parse_as_integers(const std::string_view s, UnaryIntFunction op) {
+        std::string_view ss(s);
+        std::string_view l;
+        while (getline(ss, l)) {
+            try {
+                const auto n = aoc::stoi(l);
+                op(n);
+            } catch (...) { }
+        }
+    }
     class AutoTimer {
     private:
         std::chrono::time_point<std::chrono::high_resolution_clock> start_;
