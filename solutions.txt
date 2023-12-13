@@ -1,0 +1,92 @@
+Day1
+Part 1: 280
+Part 2: 1797
+Elapsed: 0.000091 sec
+
+Day2
+Part 1: 1588178
+Part 2: 3783758
+Elapsed: 0.000287 sec
+
+Day3
+Part 1: 2592
+Part 2: 2360
+Elapsed: 0.001956 sec
+
+Day4
+Part 1: 254575
+Part 2: 1038736
+Elapsed: 0.159022 sec
+
+Day5
+Part 1: 258
+Part 2: 53
+Elapsed: 0.000436 sec
+
+Day6
+Part 1: 543903
+Part 2: 14687245
+Elapsed: 0.065612 sec
+
+Day7
+Part 1: 956
+Part 2: 40149
+Elapsed: 0.000326 sec
+
+Day8
+Part 1: 1371
+Part 2: 2117
+Elapsed: 0.000151 sec
+
+Day9
+Part 1: 207
+Part 2: 804
+Elapsed: 0.015340 sec
+
+
+Day10
+Part 1: 360154
+Part 2: 5103798
+Elapsed: 0.215404 sec
+
+Day11
+Part 1: hepxxyzz
+Part 2: heqaabcc
+Elapsed: 0.005628 sec
+
+Day12
+Elapsed Part 1: 0.000133 sec
+Elapsed Part 2: 0.000050529 sec
+Part 1: 191164
+Part 2: 87842
+Elapsed: 0.002956984 sec
+
+Day13
+Part 1: 664
+Part 2: 640
+Elapsed: 0.680401 sec
+
+Day14
+Part 1: 2655
+Part 2: 1059
+Elapsed: 0.000140 sec
+
+Day15
+Part 1: 18965440
+Part 2: 15862900
+Elapsed: 0.000657 sec
+
+Day16
+Part 1: 213
+Part 2: 323
+Elapsed: 0.000346 sec
+
+Day17
+Part 1: 1638
+Part 2: 17
+Elapsed: 0.000979 sec
+
+Day18
+Part 1: 814
+Part 2: 924
+Elapsed: 0.070339 sec
